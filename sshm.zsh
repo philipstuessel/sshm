@@ -4,7 +4,7 @@ SERVER_LIST="${JAP_FOLDER}plugins/packages/sshm/config/server.json"
 sshm() {
     if [[ "$1" == "v" || "$1" == "-v" ]]; then
     echo -e "${BRED}SSH Manager${NC}"
-    echo -e "${BOLD}v.0.1.0${NC}"
+    echo -e "${BOLD}v.0.1.1${NC}"
     echo -e "${YELLOW}JAP plugin${NC}"
     return 0
     elif [[ "$1" == "add" ]];then
@@ -18,7 +18,6 @@ sshm() {
         else
             echo -e "${BRED}ERROR${NC}"
         fi
-        return 1
     elif [[ "$1" == "l" || "$1" == "list" ]];then
         jq -r '. | to_entries[] | "\(.key) \(.value)"' $SERVER_LIST | while IFS= read -r entry; do
             echo $entry
@@ -26,20 +25,22 @@ sshm() {
     elif [[ "$1" == "r" || "$1" == "remove" ]];then 
         jq "del(.$2)" $SERVER_LIST > temp.json && mv temp.json $SERVER_LIST
         if [[ $? == 0 ]]; then
-            echo "🗑️  The SSH connection '$2' was deleted from the server list"
+            echo -e "🗑️  The SSH connection '$2' was deleted from the server list"
         else
-            echo "${BRED}An error occurred while deleting from the SSH connection${NC}"
+            echo -e "${BRED}An error occurred while deleting from the SSH connection${NC}"
         fi
     else
-        line=$(jq ".$1" $SERVER_LIST | tr -d '"')
-        if [[ $? == 0 ]]; then
-            echo -e "🔌 ${BBLUE}SSHM connect to the server '$line'${NC}"
-            ssh $line
-        if [[ ! $? == 0 ]]; then
-            echo -e "🔌 ${BRED}An error occurred while connecting to '$line'${NC}"
-        fi
-        else
-            echo -e "${BRED}'$1' is not on the server list ${NC}";
+        if [[ ! "$1" == "" ]];then
+            line=$(jq ".$1" $SERVER_LIST | tr -d '"')
+            if [[ ! $line == null ]]; then
+                echo -e "🔌 ${BBLUE}SSHM connect to the server '$line'${NC}"
+                ssh $line
+                if [[ ! $? == 0 ]]; then
+                    echo -e "🔌 ${BRED}An error occurred while connecting to '$line'${NC}"
+                fi
+            else
+                echo -e "${BRED}'$1' is not on the server list ${NC}";
+            fi
         fi
     fi
 }
